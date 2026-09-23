@@ -1,15 +1,14 @@
 package org.example;
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+
 public class Main {
     static void main(String[] args) {
 
-        MusicService spotify = new SpotifyMusicService();
-        MusicPlayer spotifyPlayer = new SimpleMusicPlayer(spotify);
-        spotifyPlayer.start();
+        DIContainer container = new DIContainer();
 
-        MusicService local = new LocalMusicService();
-        MusicPlayer localPlayer = new SimpleMusicPlayer(local);
-        localPlayer.start();
+        container.bind(MusicService.class, SpotifyMusicService.class);
+
+        MusicPlayer musicPlayer = container.getInstance(SimpleMusicPlayer.class);
+
+        musicPlayer.start();
     }
 }
