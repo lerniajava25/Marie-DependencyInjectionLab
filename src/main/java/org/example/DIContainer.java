@@ -2,7 +2,9 @@ package org.example;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class DIContainer {
 
@@ -13,6 +15,10 @@ public class DIContainer {
     }
 
     public <T> T getInstance(Class<T> type) {
+        return getInstance(type, new HashSet<>());
+    }
+
+    private <T> T getInstance(Class<T> type, Set<Class<?>> activeTypes) {
 
         try {
             Class<?> implementation = bindings.get(type);
@@ -24,15 +30,24 @@ public class DIContainer {
             if (type.isInterface()) {
                 throw new IllegalArgumentException("No implementation bound for " + type.getName());
             }
-            Constructor<?> constructor = type.getDeclaredConstructors()[0];
-            Class<?>[] parameterTypes = constructor.getParameterTypes();
-            Object[] dependencies = new Object[parameterTypes.length];
 
-            for (int i = 0; i < parameterTypes.length; i++) {
-                dependencies[i] = getInstance(parameterTypes[i]);
+            if (!activeTypes.add(type)) {
+                throw new IllegalArgumentException("Circular dependency found for " + type.getName());
             }
 
-            return type.cast(constructor.newInstance(dependencies));
+            try {
+                Constructor<?> constructor = type.getDeclaredConstructors()[0];
+                Class<?>[] parameterTypes = constructor.getParameterTypes();
+                Object[] dependencies = new Object[parameterTypes.length];
+
+                for (int i = 0; i < parameterTypes.length; i++) {
+                    dependencies[i] = getInstance(parameterTypes[i], activeTypes);
+                }
+
+                return type.cast(constructor.newInstance(dependencies));
+            } finally {
+                activeTypes.remove(type);
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
