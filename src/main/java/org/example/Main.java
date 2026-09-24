@@ -1,14 +1,17 @@
 package org.example;
 
+import org.jboss.weld.environment.se.Weld;
+import org.jboss.weld.environment.se.WeldContainer;
+
 public class Main {
     static void main(String[] args) {
 
-        DIContainer container = new DIContainer();
+        Weld weld = new Weld();
+        WeldContainer container = weld.initialize();
 
-        container.bind(MusicService.class, SpotifyMusicService.class);
-
-        MusicPlayer musicPlayer = container.getInstance(SimpleMusicPlayer.class);
-
+        MusicPlayer musicPlayer = container.select(SimpleMusicPlayer.class).get();
         musicPlayer.start();
+
+        weld.shutdown();
     }
 }
